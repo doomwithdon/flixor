@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Flixor TV",
+    "slug": "flixor-tv",
+    "scheme": "flixortv",
+    "version": "0.1.0",
+    "orientation": "landscape",
+    "android": {
+      "package": "xyz.flixor.tv",
+      "usesCleartextTraffic": true
+    },
+    "plugins": [
+      "./plugins/withLeanback"
+    ]
+  }
+}

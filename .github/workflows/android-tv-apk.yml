@@ -1,0 +1,62 @@
+name: Build Flixor Android TV APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/android-tv-leanback
+    paths:
+      - 'apps/tv/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android-tv-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: apps/tv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      # GitHub-hosted Ubuntu runners already provide the Android SDK.
+      # Avoid setup-android@v3, which may attempt to install the removed
+      # legacy SDK package named "tools".
+      - name: Verify Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms"
+          test -d "$ANDROID_HOME/build-tools"
+        working-directory: .
+      - name: Install dependencies
+        run: npm ci
+        working-directory: .
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --clean --no-install
+        env:
+          EXPO_NO_TELEMETRY: '1'
+          CI: '1'
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: apps/tv/android
+        env:
+          CI: '1'
+      - name: Upload Android TV APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flixor-tv-debug-apk
+          path: apps/tv/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
