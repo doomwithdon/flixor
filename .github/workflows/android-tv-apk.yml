@@ -31,7 +31,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      # GitHub-hosted Ubuntu runners already provide the Android SDK.
+      # Avoid setup-android@v3, which may attempt to install the removed
+      # legacy SDK package named "tools".
+      - name: Verify Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms"
+          test -d "$ANDROID_HOME/build-tools"
+        working-directory: .
       - name: Install dependencies
         run: npm ci
         working-directory: .
